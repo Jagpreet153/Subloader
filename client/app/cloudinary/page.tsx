@@ -2,47 +2,15 @@
 
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-const VideoUpload = () => {
-  const [file, setFile] = useState(null);
-  const [caption, setCaption] = useState('');
+const useVideoUpload = () => {
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [uploadedVideo, setUploadedVideo] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState('');
 
-  const handleFileSelect = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.type === 'video/mp4') {
-      if (selectedFile.size > 100 * 1024 * 1024) {
-        setError('File size exceeds 100MB limit');
-        setFile(null);
-        setPreviewUrl('');
-        return;
-      }
-      setFile(selectedFile);
-      setError('');
-      setUploadedVideo(null);
-      // Create preview URL
-      const url = URL.createObjectURL(selectedFile);
-      setPreviewUrl(url);
-    } else {
-      setError('Please select a valid MP4 video file');
-      setFile(null);
-      setPreviewUrl('');
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    
-    if (!file) {
-      setError('Please select a file first');
-      return;
-    }
-
+  const uploadVideo = async (file, caption) => {
     setUploading(true);
     setError('');
     setUploadProgress(0);
@@ -54,7 +22,7 @@ const VideoUpload = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v2/uploadVideo', formData, {
+      const response = await axios.post('http://localhost:3002/api/v2/uploadVideo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -66,30 +34,70 @@ const VideoUpload = () => {
         },
       });
 
-      setUploadedVideo(response.data.video);
-
-
-      
-      // Clear the form
-      setFile(null);
-      setPreviewUrl('');
-      setCaption('');
-      
-      
+      return response.data.video;
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || 'Failed to upload video';
       setError(errorMessage);
-      console.error('Upload error:', err);
+      throw new Error(errorMessage);
     } finally {
       setUploading(false);
       setUploadProgress(0);
     }
   };
 
+  return { uploading, uploadProgress, error, uploadVideo };
+};
+
+const VideoUpload = () => {
+  const [file, setFile] = useState(null);
+  const [caption, setCaption] = useState('');
+  const [previewUrl, setPreviewUrl] = useState('');
+  const { uploading, uploadProgress, error, uploadVideo } = useVideoUpload();
+  const router = useRouter();
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile && selectedFile.type === 'video/mp4') {
+      if (selectedFile.size > 100 * 1024 * 1024) {
+        alert('File size exceeds 100MB limit');
+        setFile(null);
+        setPreviewUrl('');
+        return;
+      }
+      setFile(selectedFile);
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+    } else {
+      alert('Please select a valid MP4 video file');
+      setFile(null);
+      setPreviewUrl('');
+    }
+  };
+  const handleUpload = async (e) => {
+    e.preventDefault();
+  
+    if (!file) {
+      alert('Please select a file first');
+      return;
+    }
+  
+    try {
+      const uploadedVideo = await uploadVideo(file, caption);
+      setFile(null);
+      setPreviewUrl('');
+      setCaption('');
+      console.log('Video uploaded to Cloudinary:', uploadedVideo);
+  
+      router.push(`/result/${uploadedVideo.id}`);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
+  };
+  
+
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <form onSubmit={handleUpload} className="space-y-4">
-        {/* File Input */}
         <div className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
           <Upload className="w-12 h-12 text-gray-400 mb-2" />
           <label className="block">
@@ -110,7 +118,6 @@ const VideoUpload = () => {
           <p className="text-xs text-gray-500 mt-2">Maximum file size: 100MB</p>
         </div>
 
-        {/* Caption Input */}
         <div>
           <label htmlFor="caption" className="block text-sm font-medium text-gray-700">
             Caption (optional)
@@ -128,18 +135,12 @@ const VideoUpload = () => {
           />
         </div>
 
-        {/* Preview */}
         {previewUrl && (
           <div className="mt-4">
-            <video
-              className="w-full rounded-lg"
-              src={previewUrl}
-              controls
-            />
+            <video className="w-full rounded-lg" src={previewUrl} controls />
           </div>
         )}
 
-        {/* Upload Progress */}
         {uploading && (
           <div className="w-full">
             <div className="bg-gray-200 rounded-full h-2.5 mb-2">
@@ -152,28 +153,12 @@ const VideoUpload = () => {
           </div>
         )}
 
-        {/* Upload Success */}
-        {uploadedVideo && (
-          <div className="mt-4 p-4 bg-green-50 rounded-lg">
-            <p className="text-green-600 font-medium">Upload successful!</p>
-            <div className="mt-2 text-sm text-gray-600">
-              <p>Video ID: {uploadedVideo.id}</p>
-              <p className="break-all">URL: {uploadedVideo.file_url}</p>
-              {uploadedVideo.caption && (
-                <p>Caption: {uploadedVideo.caption}</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Error Message */}
         {error && (
           <div className="text-red-500 text-sm mt-2 p-2 bg-red-50 rounded">
             {error}
           </div>
         )}
 
-        {/* Upload Button */}
         <button
           type="submit"
           disabled={!file || uploading}
