@@ -1,7 +1,5 @@
 const express = require('express');
-const mongoose=require('mongoose')
 const cors=require('cors')
-const cloudinary=require('cloudinary')
 const app= express();
 require("dotenv").config();
 
@@ -10,7 +8,7 @@ const PORT= process.env.PORT || 3001;
 app.use(express.json());
 
 const corsOptions = {
-    origin: 'http://localhost:3000', 
+    origin: ['http://localhost:3000','https://subloader.vercel.app/'], 
     credentials: true
   };
   
