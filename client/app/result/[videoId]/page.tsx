@@ -18,7 +18,7 @@ const VideoIdPage = ({ params }) => {
 
         // Fetch video details using videoId
         const response = await axios.put(
-          `http://localhost:3002/api/v2/uploadCaptionVideo/${unwrappedParams.videoId}`
+          `http://localhost:3002/api/v2/uploadCaptionVideo/${videoId}`
         );
 
         // Set the caption URL if the response is successful
