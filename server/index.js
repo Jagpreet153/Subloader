@@ -8,7 +8,8 @@ const PORT= process.env.PORT || 3001;
 app.use(express.json());
 
 const corsOptions = {
-    origin: ['http://localhost:3000','https://subloader.vercel.app'], 
+    // origin: ['http://localhost:3000','https://subloader.vercel.app'], 
+    origin: true, // Add origin to allow all origins
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Add supported methods
     allowedHeaders: ['Content-Type', 'Authorization'] // Add allowed headers
