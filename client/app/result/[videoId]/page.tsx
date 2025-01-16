@@ -5,9 +5,6 @@ import axios from "axios";
 
 interface Params {
   videoId: string;
-  file_url:string;
-  caption_url: string;
-
 }
 
 interface VideoResponse {
