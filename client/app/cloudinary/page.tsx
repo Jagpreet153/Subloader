@@ -1,16 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import axios, { AxiosProgressEvent } from 'axios';
 
-const useVideoUpload = () => {
+interface UploadedVideo {
+  id: string;
+  // Add other video properties as needed
+}
+
+interface UseVideoUploadReturn {
+  uploading: boolean;
+  uploadProgress: number;
+  error: string;
+  uploadVideo: (file: File, caption: string) => Promise<UploadedVideo>;
+}
+
+const useVideoUpload = (): UseVideoUploadReturn => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
-  const uploadVideo = async (file: any, caption: any) => {
+  const uploadVideo = async (file: File, caption: string): Promise<UploadedVideo> => {
     setUploading(true);
     setError('');
     setUploadProgress(0);
@@ -22,21 +34,25 @@ const useVideoUpload = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3002/api/v2/uploadVideo', formData, {
+      const response = await axios.post<{ video: UploadedVideo }>('http://localhost:3002/api/v2/uploadVideo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        onUploadProgress: (progressEvent : any) => {
-          const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent?.total
-          );
-          setUploadProgress(progress);
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setUploadProgress(progress);
+          }
         },
       });
 
       return response.data.video;
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err?.message || 'Failed to upload video';
+    } catch (err) {
+      const errorMessage = axios.isAxiosError(err) 
+        ? err.response?.data?.error || err.message 
+        : 'Failed to upload video';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -49,14 +65,14 @@ const useVideoUpload = () => {
 };
 
 const VideoUpload = () => {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
   const { uploading, uploadProgress, error, uploadVideo } = useVideoUpload();
   const router = useRouter();
 
-  const handleFileSelect = (e) => {
-    const selectedFile = e.target.files[0];
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
     if (selectedFile && selectedFile.type === 'video/mp4') {
       if (selectedFile.size > 100 * 1024 * 1024) {
         alert('File size exceeds 100MB limit');
@@ -73,7 +89,8 @@ const VideoUpload = () => {
       setPreviewUrl('');
     }
   };
-  const handleUpload = async (e) => {
+
+  const handleUpload = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
   
     if (!file) {
@@ -93,7 +110,6 @@ const VideoUpload = () => {
       console.error('Upload failed:', err);
     }
   };
-  
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">

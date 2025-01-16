@@ -3,11 +3,26 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const VideoIdPage = ({ params }: any) => {
-  const [videoId, setVideoId] = useState(null); // Store videoId after unwrapping
-  const [videoUrl, setVideoUrl] = useState(null); // Store the caption URL
-  const [loading, setLoading] = useState(true); // For loading state
-  const [error, setError] = useState(null); // For error handling
+interface Params {
+  videoId: string;
+  file_url:string;
+  caption_url: string;
+
+}
+
+interface VideoResponse {
+  data: {
+    videoId?: string;
+    file_url?:string;
+    caption_url?: string;  
+  };
+}
+
+const VideoIdPage = ({ params }: { params: Promise<Params> | Params }) => {
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function unwrapParams() {
@@ -17,7 +32,7 @@ const VideoIdPage = ({ params }: any) => {
         setVideoId(unwrappedParams.videoId);
 
         // Fetch video details using videoId
-        const response = await axios.put(
+        const response = await axios.put<VideoResponse>(
           `http://localhost:3002/api/v2/uploadCaptionVideo/${videoId}`
         );
 
@@ -27,9 +42,15 @@ const VideoIdPage = ({ params }: any) => {
         } else {
           throw new Error("Caption URL not found.");
         }
-      } catch (err : any) {
+      } catch (err) {
         console.error("Error unwrapping params or fetching video:", err);
-        setError(err?.message || "Failed to load video details.");
+        if (err instanceof Error) {
+          setError(err.message);
+        } else if (axios.isAxiosError(err)) {
+          setError(err.response?.data?.message || err.message || "Failed to load video details.");
+        } else {
+          setError("Failed to load video details.");
+        }
       } finally {
         setLoading(false);
       }
