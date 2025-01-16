@@ -8,7 +8,7 @@ function Getstarted() {
         <FileUploaderRegular
           sourceList="local,dropbox"
           classNameUploader="uc-light"
-          pubkey={process?.env?.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY || null}
+          pubkey={process?.env?.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY || ''}
         />
     </div>
   );
