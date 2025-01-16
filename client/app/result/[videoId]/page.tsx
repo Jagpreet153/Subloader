@@ -3,34 +3,37 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-interface Params {
-  videoId: string;
+// Define the params interface
+interface PageProps {
+  params: {
+    videoId: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 interface VideoResponse {
   data: {
     videoId?: string;
-    file_url?:string;
+    file_url?: string;
     caption_url?: string;  
   };
 }
 
-const VideoIdPage = ({ params }: { params: Promise<Params> | Params }) => {
+const VideoIdPage = async ({ params, searchParams }: PageProps) => {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function unwrapParams() {
+    async function fetchVideoDetails() {
       try {
-        // Unwrap the params promise to get videoId
-        const unwrappedParams = await params;
-        setVideoId(unwrappedParams.videoId);
+        // No need to unwrap params anymore as it's directly accessible
+        setVideoId(params.videoId);
 
         // Fetch video details using videoId
         const response = await axios.put<VideoResponse>(
-          `http://localhost:3002/api/v2/uploadCaptionVideo/${videoId}`
+          `http://localhost:3002/api/v2/uploadCaptionVideo/${params.videoId}`
         );
 
         // Set the caption URL if the response is successful
@@ -40,7 +43,7 @@ const VideoIdPage = ({ params }: { params: Promise<Params> | Params }) => {
           throw new Error("Caption URL not found.");
         }
       } catch (err) {
-        console.error("Error unwrapping params or fetching video:", err);
+        console.error("Error fetching video:", err);
         if (err instanceof Error) {
           setError(err.message);
         } else if (axios.isAxiosError(err)) {
@@ -53,8 +56,8 @@ const VideoIdPage = ({ params }: { params: Promise<Params> | Params }) => {
       }
     }
 
-    unwrapParams();
-  }, [params]);
+    fetchVideoDetails();
+  }, [params.videoId]);
 
   // Loading state
   if (loading) {
