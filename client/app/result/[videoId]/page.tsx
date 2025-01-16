@@ -3,18 +3,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-type PageProps = {
-  params: {
-    videoId: string;
-  };
-};
-
 interface VideoResponse {
   data: {
     videoId?: string;
     file_url?: string;
     caption_url?: string;  
   };
+}
+
+interface PageProps {
+  params: Promise<{ videoId: string }>;
 }
 
 const VideoIdPage = ({ params }: PageProps) => {
@@ -25,9 +23,12 @@ const VideoIdPage = ({ params }: PageProps) => {
   useEffect(() => {
     async function fetchVideoDetails() {
       try {
-        // Fetch video details using videoId from params directly
+        // Await the params promise to get the videoId
+        const resolvedParams = await params;
+        
+        // Fetch video details using the resolved videoId
         const response = await axios.put<VideoResponse>(
-          `http://localhost:3002/api/v2/uploadCaptionVideo/${params.videoId}`
+          `http://localhost:3002/api/v2/uploadCaptionVideo/${resolvedParams.videoId}`
         );
 
         // Set the caption URL if the response is successful
@@ -51,7 +52,7 @@ const VideoIdPage = ({ params }: PageProps) => {
     }
 
     fetchVideoDetails();
-  }, [params.videoId]);
+  }, [params]);
 
   // Loading state
   if (loading) {
