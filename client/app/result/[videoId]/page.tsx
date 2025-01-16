@@ -28,7 +28,7 @@ const VideoIdPage = ({ params }: PageProps) => {
         
         // Fetch video details using the resolved videoId
         const response = await axios.put<VideoResponse>(
-          `${process.env.Backend_URL}/uploadCaptionVideo/${resolvedParams.videoId}`
+          `https://subloader.onrender.com/api/v2/uploadCaptionVideo/${resolvedParams.videoId}`
         );
 
         // Set the caption URL if the response is successful

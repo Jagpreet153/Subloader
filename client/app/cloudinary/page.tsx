@@ -34,7 +34,7 @@ const useVideoUpload = (): UseVideoUploadReturn => {
     }
 
     try {
-      const response = await axios.post<{ video: UploadedVideo }>(`${process.env.Backend_URL}/uploadVideo`, formData, {
+      const response = await axios.post<{ video: UploadedVideo }>(`https://subloader.onrender.com/api/v2/uploadVideo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
