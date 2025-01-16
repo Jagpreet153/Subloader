@@ -3,37 +3,34 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// Define the params interface
-interface PageProps {
-  params: {
-    videoId: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+interface Params {
+  videoId: string;
 }
 
 interface VideoResponse {
   data: {
     videoId?: string;
-    file_url?: string;
+    file_url?:string;
     caption_url?: string;  
   };
 }
 
-const VideoIdPage = async ({ params, searchParams }: PageProps) => {
+const VideoIdPage = ({ params }: { params: Promise<Params> | Params }) => {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchVideoDetails() {
+    async function unwrapParams() {
       try {
-        // No need to unwrap params anymore as it's directly accessible
-        setVideoId(params.videoId);
+        // Unwrap the params promise to get videoId
+        const unwrappedParams = await params;
+        setVideoId(unwrappedParams.videoId);
 
         // Fetch video details using videoId
         const response = await axios.put<VideoResponse>(
-          `http://localhost:3002/api/v2/uploadCaptionVideo/${params.videoId}`
+          `http://localhost:3002/api/v2/uploadCaptionVideo/${videoId}`
         );
 
         // Set the caption URL if the response is successful
@@ -43,7 +40,7 @@ const VideoIdPage = async ({ params, searchParams }: PageProps) => {
           throw new Error("Caption URL not found.");
         }
       } catch (err) {
-        console.error("Error fetching video:", err);
+        console.error("Error unwrapping params or fetching video:", err);
         if (err instanceof Error) {
           setError(err.message);
         } else if (axios.isAxiosError(err)) {
@@ -55,9 +52,9 @@ const VideoIdPage = async ({ params, searchParams }: PageProps) => {
         setLoading(false);
       }
     }
-
-    fetchVideoDetails();
-  }, [params.videoId]);
+    if(videoId )
+    unwrapParams();
+  }, [videoId,params]);
 
   // Loading state
   if (loading) {
