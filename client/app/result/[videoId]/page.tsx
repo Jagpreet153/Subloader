@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const VideoIdPage = ({ params }) => {
+const VideoIdPage = ({ params }: any) => {
   const [videoId, setVideoId] = useState(null); // Store videoId after unwrapping
   const [videoUrl, setVideoUrl] = useState(null); // Store the caption URL
   const [loading, setLoading] = useState(true); // For loading state
@@ -27,9 +27,9 @@ const VideoIdPage = ({ params }) => {
         } else {
           throw new Error("Caption URL not found.");
         }
-      } catch (err) {
+      } catch (err : any) {
         console.error("Error unwrapping params or fetching video:", err);
-        setError(err.message || "Failed to load video details.");
+        setError(err?.message || "Failed to load video details.");
       } finally {
         setLoading(false);
       }

@@ -10,7 +10,7 @@ const useVideoUpload = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
-  const uploadVideo = async (file, caption) => {
+  const uploadVideo = async (file: any, caption: any) => {
     setUploading(true);
     setError('');
     setUploadProgress(0);
@@ -26,17 +26,17 @@ const useVideoUpload = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent : any) => {
           const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
+            (progressEvent.loaded * 100) / progressEvent?.total
           );
           setUploadProgress(progress);
         },
       });
 
       return response.data.video;
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Failed to upload video';
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || err?.message || 'Failed to upload video';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
